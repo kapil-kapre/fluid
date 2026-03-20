@@ -1,4 +1,12 @@
+#if __has_include(<glad/glad.h>)
+#define FLUID_GLAD_V1 1
 #include <glad/glad.h>
+#elif __has_include(<glad/gl.h>)
+#define FLUID_GLAD_V2 1
+#include <glad/gl.h>
+#else
+#error "GLAD header not found. Install GLAD and add include paths for glad/glad.h or glad/gl.h."
+#endif
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
@@ -570,6 +578,14 @@ static void processInput(GLFWwindow* window) {
     }
 }
 
+static bool loadOpenGLFunctions() {
+#if defined(FLUID_GLAD_V1)
+    return gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) != 0;
+#elif defined(FLUID_GLAD_V2)
+    return gladLoadGL((GLADloadfunc)glfwGetProcAddress) != 0;
+#endif
+}
+
 int main() {
     if (!glfwInit()) return EXIT_FAILURE;
 
@@ -590,7 +606,7 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSwapInterval(1);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!loadOpenGLFunctions()) {
         glfwDestroyWindow(window);
         glfwTerminate();
         return EXIT_FAILURE;
